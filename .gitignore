@@ -1,0 +1,18 @@
+# Ignore Python cache and notebooks' checkpoints
+__pycache__/
+.ipynb_checkpoints/
+
+# Ignore local datasets and model artifacts (optional; adjust as needed)
+data/
+models/*.pt
+
+# Secrets: never commit API keys
+.secrets/
+*.env
+.env*
+*apikey*
+*api_key*
+*API_KEY*
+
+# OS/editor cruft
+.DS_Store
