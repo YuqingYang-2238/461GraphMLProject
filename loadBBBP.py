@@ -1,6 +1,7 @@
 import os
 import random
 import numpy as np
+import warnings
 
 import torch
 from torch.utils.data import Subset
@@ -9,7 +10,12 @@ from torch_geometric.datasets import MoleculeNet
 from deepchem.splits import ScaffoldSplitter
 from deepchem.data import NumpyDataset
 
-# Do not use this, use function in loadMoleculeData.py instead
+
+warnings.warn(
+    "loadBBBP.py is no longer used. Please use loadMoleculeData.py instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 def set_seed(seed=42):
     random.seed(seed)
