@@ -7,6 +7,9 @@ from sklearn.metrics import roc_auc_score
 
 from torch_geometric.loader import DataLoader
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from loadMoleculeData import load_datasets
 from model_configs import ConfigManager, ModelConfig
 
@@ -111,7 +114,7 @@ def train(datasets, config_manager: ConfigManager = None):
 
             if val_auc > best_val_auc:
                 best_val_auc = val_auc
-                torch.save(model.state_dict(), f"models/baselineGCN_{dataset['name']}.pt")
+                torch.save(model.state_dict(), f"../models/baselineGCN_{dataset['name']}.pt")
 
             if epoch % 5 == 0 or epoch == 1:
                 print(f"Epoch {epoch:02d} | "
@@ -119,7 +122,7 @@ def train(datasets, config_manager: ConfigManager = None):
                     f"Val AUC {val_auc:.3f}")
 
         print(f"\nBest Val AUC: {best_val_auc:.3f}")
-        ckpt = torch.load(f"models/baselineGCN_{dataset['name']}.pt", map_location=device)
+        ckpt = torch.load(f"../models/baselineGCN_{dataset['name']}.pt", map_location=device)
         model.load_state_dict(ckpt)
         _, test_auc = do_epoch(test_loader, training=False, model=model, criterion=criterion)
         print(f"Test AUC (best-val checkpoint): {test_auc:.3f}")

@@ -1,4 +1,7 @@
 import optuna
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from loadMoleculeData import load_datasets
 from model_configs import ModelConfig, ConfigManager
 
@@ -15,9 +18,9 @@ def objective(trial, dataset_name, train_loader, val_loader, original_dataset):
     """Objective function for Optuna optimization."""
     hidden_channels = trial.suggest_categorical('hidden_channels', [64, 128, 256])
     num_layers = trial.suggest_categorical('num_layers', [2, 3, 4, 5])
-    dropout = trial.suggest_categorical('dropout', [0.1])
+    dropout = trial.suggest_categorical('dropout', [0.1, 0.15, 0.2])
     learning_rate = trial.suggest_categorical('learning_rate', [1e-2, 1e-3])
-    weight_decay = trial.suggest_categorical('weight_decay', [1e-5, 1e-7])
+    weight_decay = trial.suggest_categorical('weight_decay', [1e-5, 1e-6, 1e-7])
     
     # Create model using the pre-loaded dataset info
     model = GCN(in_channels=original_dataset.num_features, 
@@ -63,9 +66,9 @@ for dataset_name in datasets_to_optimize:
     print(f"Loading {dataset_name} dataset...")
     datasets = load_datasets([dataset_name])
     dataset = datasets[0]
-    train_loader = DataLoader(dataset['train_set'], batch_size=256, shuffle=True)
-    val_loader = DataLoader(dataset['val_set'], batch_size=256, shuffle=False)
-    test_loader = DataLoader(dataset['test_set'], batch_size=256, shuffle=False)
+    train_loader = DataLoader(dataset['train_set'], batch_size=128, shuffle=True)
+    val_loader = DataLoader(dataset['val_set'], batch_size=128, shuffle=False)
+    test_loader = DataLoader(dataset['test_set'], batch_size=128, shuffle=False)
     original_dataset = dataset['train_set'].dataset
     print(f"Dataset loaded: {len(dataset['train_set'])} train, {len(dataset['val_set'])} val, {len(dataset['test_set'])} test samples")
     
@@ -74,7 +77,7 @@ for dataset_name in datasets_to_optimize:
     study = optuna.create_study(direction='maximize')
     study.optimize(
         lambda trial: objective(trial, dataset_name, train_loader, val_loader, original_dataset), 
-        n_trials=48
+        n_trials=216
     )
     
     print(f"Best parameters: {study.best_params}")
@@ -88,7 +91,7 @@ for dataset_name in datasets_to_optimize:
         dropout=study.best_params['dropout'],
         learning_rate=study.best_params['learning_rate'],
         weight_decay=study.best_params['weight_decay'],
-        batch_size=256,  # Use the same batch size as in training
+        batch_size=128,  # Use the same batch size as in training
         epochs=100
     )
     
