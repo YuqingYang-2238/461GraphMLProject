@@ -7,6 +7,10 @@ from torch_geometric.datasets import MoleculeNet
 from deepchem.splits import ScaffoldSplitter
 from deepchem.data import NumpyDataset
 
+# Suppress RDKit warnings
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*')
+
 
 def load_datasets(names = ["BBBP", "BACE", "HIV"], root = "data/moleculenet", scaffold = "standard"): # default is BBBP, BACE, and HIV which are single task classification datasets
     if scaffold == "standard":
@@ -32,7 +36,6 @@ def load_datasets(names = ["BBBP", "BACE", "HIV"], root = "data/moleculenet", sc
 
 
 def load_datasets_csv(names = ["BBBP", "BACE", "HIV"], root = "data/moleculenet", scaffold = "standard", output_dir = "data/moleculenet"):
-    # Load datasets using the existing function to ensure identical splits
     datasets = load_datasets(names=names, root=root, scaffold=scaffold)
     
     # Extract SMILES and outcomes for each split

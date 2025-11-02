@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, global_mean_pool
 import numpy as np
 from sklearn.metrics import roc_auc_score
+from BaselineGCNModeling.model_configs import ConfigManager, ModelConfig
 
 from torch_geometric.loader import DataLoader
 
@@ -11,7 +12,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from loadMoleculeData import load_datasets
-from model_configs import ConfigManager, ModelConfig
+
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -88,6 +89,9 @@ def train(datasets, config_manager: ConfigManager = None):
         config_manager = ConfigManager()
         config_manager.initialize_default_configs()
     
+    # Create models directory if it doesn't exist
+    models_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'models')
+    
     for dataset in datasets:
         # Get dataset-specific configuration
         config = config_manager.get_config(dataset['name'])
@@ -114,7 +118,7 @@ def train(datasets, config_manager: ConfigManager = None):
 
             if val_auc > best_val_auc:
                 best_val_auc = val_auc
-                torch.save(model.state_dict(), f"../models/baselineGCN_{dataset['name']}.pt")
+                torch.save(model.state_dict(), os.path.join(models_dir, f"baselineGCN_{dataset['name']}.pt"))
 
             if epoch % 5 == 0 or epoch == 1:
                 print(f"Epoch {epoch:02d} | "
@@ -122,13 +126,13 @@ def train(datasets, config_manager: ConfigManager = None):
                     f"Val AUC {val_auc:.3f}")
 
         print(f"\nBest Val AUC: {best_val_auc:.3f}")
-        ckpt = torch.load(f"../models/baselineGCN_{dataset['name']}.pt", map_location=device)
+        ckpt = torch.load(os.path.join(models_dir, f"baselineGCN_{dataset['name']}.pt"), map_location=device)
         model.load_state_dict(ckpt)
         _, test_auc = do_epoch(test_loader, training=False, model=model, criterion=criterion)
         print(f"Test AUC (best-val checkpoint): {test_auc:.3f}")
 
-def get_probs(model, dataset):
-    test_loader = DataLoader(dataset['test_set'], batch_size=256, shuffle=False)
+def get_logits(model, dataset, split_name = "test_set"):
+    test_loader = DataLoader(dataset[split_name], batch_size=256, shuffle=False)
     model.eval()
     all_logits = []
     for batch in test_loader:
@@ -136,16 +140,6 @@ def get_probs(model, dataset):
         logits = model(batch)
         all_logits.append(logits.detach().cpu())
     return torch.cat(all_logits).numpy()
-
-def load_model(model_path, dataset_name, config_manager: ConfigManager = None):
-    """Load a trained model with its configuration."""
-    if config_manager is None:
-        config_manager = ConfigManager()
-    
-    config = config_manager.get_config(dataset_name)
-    # Note: This requires the dataset to be available to get num_features
-    # In practice, you might want to store num_features in the config or model file
-    raise NotImplementedError("load_model requires dataset to get num_features. Consider storing it in config.")
     
 def load_model_with_config(model_path, config: ModelConfig, in_channels: int):
     """Load a trained model with explicit configuration and input channels."""
@@ -173,14 +167,6 @@ def update_dataset_config(dataset_name: str, **kwargs):
     config = config_manager.update_config(dataset_name, **kwargs)
     print(f"Updated config for {dataset_name}: {config.to_dict()}")
     return config
-
-def list_available_configs():
-    """List all available dataset configurations."""
-    config_manager = ConfigManager()
-    configs = config_manager.list_configs()
-    for dataset_name, config in configs.items():
-        print(f"{dataset_name}: {config.to_dict()}")
-    return configs
     
 if __name__ == "__main__":
     # Initialize configuration manager
