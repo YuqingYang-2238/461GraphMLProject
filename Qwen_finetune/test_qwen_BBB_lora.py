@@ -6,7 +6,7 @@ import json
 import re
 
 
-MODEL_DIR = "./qwen2_7B_bbbp_lora"
+MODEL_DIR = "./qwen2_1.5B_bbbp_lora"
 use_few_shot = True
 
 DATA_PATH = "data/few_shot_examples.csv"      # few-shot examples
@@ -192,7 +192,7 @@ def main():
     predictions_df = pd.DataFrame(predictions)
     os.makedirs("predictions", exist_ok=True)
     predictions_df.to_csv(
-        f"predictions/qwen2_7B_bbbp_lora_8_shots_predictions.csv",
+        f"predictions/qwen2_1.5B_bbbp_lora_8_shots_predictions.csv",
         index=False,
     )
 
