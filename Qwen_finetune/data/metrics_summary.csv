@@ -1,0 +1,2 @@
+model,k,n,TP,FP,FN,TN,precision,recall,f1,csv
+untuned,8,204,0,1,107,96,0.0,0.0,0.0,qwen2_1.5B_bbbp_lora_8_shots_predictions_untuned.csv
